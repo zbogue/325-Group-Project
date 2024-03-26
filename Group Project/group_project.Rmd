@@ -1,0 +1,18 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Data Set Link: https://www.propublica.org/datastore/dataset/compas-recidivism-risk-score-data-and-analysis
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+data = read.csv('/Users/zebbogue/Documents/GitHub/R-Scripts/Group Project/compas-scores-raw.csv')
+```
+
+```{r}
+head(data)
+```
+
