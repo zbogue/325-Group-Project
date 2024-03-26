@@ -4,6 +4,7 @@ output: html_notebook
 ---
 
 Data Set Link: https://www.propublica.org/datastore/dataset/compas-recidivism-risk-score-data-and-analysis
+GitHub Link: https://github.com/propublica/compas-analysis/
 
 ```{r}
 library(dplyr)
