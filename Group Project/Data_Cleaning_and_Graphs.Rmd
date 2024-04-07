@@ -1,0 +1,93 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+library(dplyr)
+library(ggplot2)
+data = read_csv("compas-scores-two-years.csv")
+
+```
+
+
+Renaming Columns
+
+```{r}
+data = data %>% rename(Sex = sex,
+                Age = age,
+                Race = race,
+                Is_recid = is_recid,
+                Recidivism_score = decile_score...40,
+                Score_text = score_text,
+                Violence_score = v_decile_score,
+                Priors = priors_count...49)
+```
+
+
+Selecting relevant columns for analysis
+```{r}
+data = data %>% select(Sex, Age, Race, Is_recid,Recidivism_score,Violence_score, Priors, Score_text)
+
+```
+
+
+Data o
+```{r}
+str(data)
+unique(data$Race) #looking at different races in dataframe
+
+ggplot(data, aes(x = Race)) + 
+  geom_bar() + 
+  theme_minimal() + 
+  labs(title = "Representation of each Race in the Dataset", 
+       x = "Race", 
+       y = "Number of Individuals")
+
+```
+```{r}
+ggplot(data, aes(x = Recidivism_score)) + 
+  geom_histogram(binwidth = 1, fill = "grey", color = "black") +
+  labs(title = "Distribution of Scores", x = "Score", y = "Frequency") +
+  theme_minimal()
+
+```
+```{r}
+ggplot(data, aes(x = Race, y = Recidivism_score)) +
+  geom_boxplot() +
+  labs(title = "Distribution of Recidivism Scores by Race",
+       x = "Race",
+       y = "Recidivism Score") +
+  theme_minimal()
+
+```
+```{r}
+
+high_risk = data %>% filter(Score_text == 'High') %>%
+  group_by(Race) %>%
+  summarise(count = n())
+
+summary_data <- data %>%
+  filter(Score_text == 'High') %>%
+  group_by(Race) %>%
+  summarise(
+    Total_High_Risk = n(),
+    Total_Recidivism = sum(Is_recid, na.rm = TRUE)
+    )
+
+summary_data %>% mutate(percent_recid = Total_Recidivism/Total_High_Risk)
+
+  
+ 
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
