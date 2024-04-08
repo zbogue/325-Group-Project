@@ -31,7 +31,7 @@ model <- glm(is_recid ~ age + race + priors_count...9, data = train_data, family
 # Predict on Testing Data
 test_data$predicted_recid <- predict(model, newdata = test_data, type = "response")
 
-# Convert probabilities to binary outcomes
+# Convert probabilities to binary outcomes (found out how to do this and that it was possible from https://stackoverflow.com/questions/56065919/how-to-turn-a-list-of-probabilities-into-binary-values)
 test_data$predicted_class <- ifelse(test_data$predicted_recid > 0.5, 1, 0)
 
 # Assess Model Performance (Here we calculate the overall accuracy)
