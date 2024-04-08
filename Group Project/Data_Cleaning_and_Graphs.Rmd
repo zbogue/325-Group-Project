@@ -1,6 +1,8 @@
 ---
 title: "R Notebook"
 output: html_notebook
+editor_options: 
+  chunk_output_type: inline
 ---
 
 This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
@@ -10,7 +12,7 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 ```{r}
 library(dplyr)
 library(ggplot2)
-data = read_csv("compas-scores-two-years.csv")
+data = read.csv("/Users/zebbogue/Documents/GitHub/325-Group-Project/Group Project/compas-scores-two-years.csv")
 
 ```
 
@@ -18,20 +20,15 @@ data = read_csv("compas-scores-two-years.csv")
 Renaming Columns
 
 ```{r}
-data = data %>% rename(Sex = sex,
-                Age = age,
-                Race = race,
-                Is_recid = is_recid,
-                Recidivism_score = decile_score...40,
-                Score_text = score_text,
-                Violence_score = v_decile_score,
-                Priors = priors_count...49)
+data = data %>% rename(recidivism_score = decile_score.1,
+                       violence_score = v_decile_score,
+                       priors = priors_count)
 ```
 
 
 Selecting relevant columns for analysis
 ```{r}
-data = data %>% select(Sex, Age, Race, Is_recid,Recidivism_score,Violence_score, Priors, Score_text)
+data = data %>% select(sex, age, race, is_recid, recidivism_score, violence_score, priors, score_text)
 
 ```
 
@@ -39,10 +36,12 @@ data = data %>% select(Sex, Age, Race, Is_recid,Recidivism_score,Violence_score,
 Data o
 ```{r}
 str(data)
-unique(data$Race) #looking at different races in dataframe
+unique(data$race) #looking at different races in dataframe
 
-ggplot(data, aes(x = Race)) + 
-  geom_bar() + 
+data %>% group_by(race) %>%
+  count(race)  %>%
+  ggplot(aes(x = reorder(race, -n), y = n)) + 
+  geom_col() + 
   theme_minimal() + 
   labs(title = "Representation of each Race in the Dataset", 
        x = "Race", 
@@ -50,14 +49,30 @@ ggplot(data, aes(x = Race)) +
 
 ```
 ```{r}
-ggplot(data, aes(x = Recidivism_score)) + 
+data %>% group_by(race) %>%
+  count(recidivism_score) %>%
+  ggplot(aes(x = recidivism_score, y = n, fill = race)) + 
+  geom_col() +
+  theme_minimal() +
+  labs(title = "Distribution of Scores by Race",
+       x = "Recidivism Score",
+       y = "Number of Individuals")
+
+```
+
+```{r}
+data %>% filter(race != 'Native American') %>%
+  filter(race != 'Asian') %>%
+  ggplot(aes(x = recidivism_score)) + 
   geom_histogram(binwidth = 1, fill = "grey", color = "black") +
   labs(title = "Distribution of Scores", x = "Score", y = "Frequency") +
   theme_minimal()
 
 ```
 ```{r}
-ggplot(data, aes(x = Race, y = Recidivism_score)) +
+data %>% filter(race != 'Native American') %>%
+  filter(race != 'Asian') %>%
+  ggplot(aes(x = race, y = recidivism_score)) +
   geom_boxplot() +
   labs(title = "Distribution of Recidivism Scores by Race",
        x = "Race",
@@ -67,27 +82,92 @@ ggplot(data, aes(x = Race, y = Recidivism_score)) +
 ```
 ```{r}
 
-high_risk = data %>% filter(Score_text == 'High') %>%
-  group_by(Race) %>%
+high_risk = data %>% filter(score_text == 'High') %>%
+  group_by(race) %>%
   summarise(count = n())
 
 summary_data <- data %>%
-  filter(Score_text == 'High') %>%
-  group_by(Race) %>%
+  filter(score_text == 'High') %>%
+  group_by(race) %>%
   summarise(
     Total_High_Risk = n(),
-    Total_Recidivism = sum(Is_recid, na.rm = TRUE)
+    Total_Recidivism = sum(is_recid, na.rm = TRUE)
     )
 
 summary_data %>% mutate(percent_recid = Total_Recidivism/Total_High_Risk)
 
-  
- 
+```
+```{r}
+variables <- data %>% 
+  select(recidivism_score, violence_score, age, priors)
+
+variables
+
+mean1 <- variables %>% summarise(across(everything(), mean, na.rm=TRUE))
+sd1 <- variables %>% summarise(across(everything(), sd, na.rm=TRUE))
+min1 <- variables %>% summarise(across(everything(), min, na.rm=TRUE))
+max1 <- variables %>% summarise(across(everything(), max, na.rm=TRUE))
+
+table <- rbind(mean1, sd1, min1, max1) # rbind() consents to bind (join) the vectors as rows of a table
+
+rownames(table) <- c("Mean", "Standard Deviation", "Minimum", "Maximum")
+
+#Transpose the dataframe to flip it around
+table <- t(table)
+
+#remove scientific notation
+options(scipen = 999)
+
+table <- table %>% 
+  as.data.frame %>% 
+  mutate_if(is.numeric, round, digits=2)
+
+
+table
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+```{r}
+library(cowplot)
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+a <- ggplot(data)+
+  geom_point(aes(x = priors, y = recidivism_score, color = race))+
+  geom_smooth(method = "lm", aes(x = priors, y = recidivism_score))+
+  theme_minimal()+
+  labs(title = "Priors vs Recidivism Scores")
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+b <- ggplot(data)+
+  geom_point(aes(x = age, y = recidivism_score, color = race))+
+  geom_smooth(method = "lm", aes(x = age, y = recidivism_score))+
+  theme_minimal()+
+  labs(title = "Age vs Recidivism Scores")
+
+c <- ggplot(data)+
+  geom_point(aes(x = violence_score, y = recidivism_score, color = race))+
+  geom_smooth(method = "lm", aes(x = violence_score, y = recidivism_score))+
+  theme_minimal()+
+  labs(title = "Violence Scores vs Recidivism Scores")
+
+plot_grid(a, b, c, nrow = 3)
+```
+```{r}
+corr_data <- data %>% select(recidivism_score, violence_score, age, priors)
+
+#Calculate correlations
+corr_table <- cor(corr_data)
+
+library(corrplot)
+
+#The cex arguments just change the size of the text on the plot
+corrplot(corr_table, tl.cex = 1, cl.cex = 0.5)
+
+corrplot(corr_table, method = 'number', tl.cex = 0.8, cl.cex = 0.5)
+```
+```{r}
+summary(lm(recidivism_score ~ factor(race), data = data))
+#https://stats.oarc.ucla.edu/r/modules/coding-for-categorical-variables-in-regression-models/
+summary(lm(recidivism_score ~ priors, data = data))
+summary(lm(recidivism_score ~ age, data = data))
+summary(lm(recidivism_score ~ violence_score, data = data))
+
+```
 
