@@ -1,0 +1,86 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+# Load necessary libraries
+library(dplyr)
+
+head(compas_scores_two_years)
+# Assuming your data is already loaded into a variable called 'compas_data'
+
+# Data Cleaning and Preparation
+data <- compas_scores_two_years %>%
+  select(id, sex, age, race, priors_count...9, is_recid) %>%
+  filter(!is.na(is_recid)) %>%
+  mutate(is_recid = as.factor(is_recid))
+
+# Split into training and testing sets (75% training data)
+set.seed(8675309)
+training_rows <- sample(nrow(data), 0.75 * nrow(data))
+train_data <- data[training_rows, ]
+test_data <- data[-training_rows, ]
+
+# Fit Logistic Regression Model on Training Data
+model <- glm(is_recid ~ age + race + priors_count...9, data = train_data, family = "binomial")
+
+# Predict on Testing Data
+test_data$predicted_recid <- predict(model, newdata = test_data, type = "response")
+
+# Convert probabilities to binary outcomes
+test_data$predicted_class <- ifelse(test_data$predicted_recid > 0.5, 1, 0)
+
+# Assess Model Performance
+# Here we calculate the overall accuracy.
+correct_predictions <- test_data$predicted_class == test_data$is_recid
+accuracy <- sum(correct_predictions) / length(correct_predictions)
+print(paste("Accuracy: ", accuracy))
+
+# Assess Model Performance Across Races
+accuracy_by_race <- test_data %>%
+  group_by(race) %>%
+  summarise(
+    count = n(),
+    correct = sum(predicted_class == is_recid),
+    accuracy = correct / count
+  )
+
+print(accuracy_by_race)
+
+# If you want to visualize the results:
+library(ggplot2)
+cbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+ggplot(accuracy_by_race, aes(x = race, y = accuracy, fill = race)) +
+  geom_bar(stat = "identity") +
+  scale_colour_manual(values=cbPalette) +
+  theme_minimal() +
+  labs(title = "Accuracy of Recidivism Prediction by Race")
+
+average_scores <- test_data %>%
+  group_by(race) %>%
+  summarise(avg_predicted_class = mean(as.numeric(predicted_class), na.rm = TRUE),
+            actual_recidivism_rate = mean(as.numeric(is_recid), na.rm = TRUE))
+
+# Compare these averages
+average_scores
+
+#avoa test
+anova_result <- aov(is_recid ~ race, data = compas_scores_two_years)
+summary(anova_result)
+#p values for model
+summary(model)
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
