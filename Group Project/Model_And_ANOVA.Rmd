@@ -12,7 +12,6 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 library(dplyr)
 
 head(compas_scores_two_years)
-# Assuming your data is already loaded into a variable called 'compas_data'
 
 # Data Cleaning and Preparation
 data <- compas_scores_two_years %>%
@@ -35,8 +34,7 @@ test_data$predicted_recid <- predict(model, newdata = test_data, type = "respons
 # Convert probabilities to binary outcomes
 test_data$predicted_class <- ifelse(test_data$predicted_recid > 0.5, 1, 0)
 
-# Assess Model Performance
-# Here we calculate the overall accuracy.
+# Assess Model Performance (Here we calculate the overall accuracy)
 correct_predictions <- test_data$predicted_class == test_data$is_recid
 accuracy <- sum(correct_predictions) / length(correct_predictions)
 print(paste("Accuracy: ", accuracy))
@@ -52,7 +50,7 @@ accuracy_by_race <- test_data %>%
 
 print(accuracy_by_race)
 
-# If you want to visualize the results:
+# To visualize the results:
 library(ggplot2)
 cbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
@@ -70,7 +68,7 @@ average_scores <- test_data %>%
 # Compare these averages
 average_scores
 
-#avoa test
+#anova test
 anova_result <- aov(is_recid ~ race, data = compas_scores_two_years)
 summary(anova_result)
 #p values for model
