@@ -8,7 +8,6 @@ This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
 
 ```{r}
-# Load necessary libraries
 library(dplyr)
 
 head(compas_scores_two_years)
@@ -16,8 +15,7 @@ head(compas_scores_two_years)
 # Data Cleaning and Preparation
 data <- compas_scores_two_years %>%
   select(id, sex, age, race, priors_count...9, is_recid) %>%
-  filter(!is.na(is_recid)) %>%
-  mutate(is_recid = as.factor(is_recid))
+  filter(!is.na(is_recid))
 
 # Split into training and testing sets (75% training data)
 set.seed(8675309)
@@ -31,10 +29,10 @@ model <- glm(is_recid ~ age + race + priors_count...9, data = train_data, family
 # Predict on Testing Data
 test_data$predicted_recid <- predict(model, newdata = test_data, type = "response")
 
-# Convert probabilities to binary outcomes (found out how to do this and that it was possible from https://stackoverflow.com/questions/56065919/how-to-turn-a-list-of-probabilities-into-binary-values)
+# Convert probabilities to binary outcomes
 test_data$predicted_class <- ifelse(test_data$predicted_recid > 0.5, 1, 0)
 
-# Assess Model Performance (Here we calculate the overall accuracy)
+# Assess Model Performance(Here we calculate the overall accuracy)
 correct_predictions <- test_data$predicted_class == test_data$is_recid
 accuracy <- sum(correct_predictions) / length(correct_predictions)
 print(paste("Accuracy: ", accuracy))
@@ -60,12 +58,13 @@ ggplot(accuracy_by_race, aes(x = race, y = accuracy, fill = race)) +
   theme_minimal() +
   labs(title = "Accuracy of Recidivism Prediction by Race")
 
+#to try and understand the graphh above we look at predicted rate vs actual recidivism
 average_scores <- test_data %>%
   group_by(race) %>%
   summarise(avg_predicted_class = mean(as.numeric(predicted_class), na.rm = TRUE),
-            actual_recidivism_rate = mean(as.numeric(is_recid), na.rm = TRUE))
+            actual_recidivism_rate = mean((is_recid), na.rm = TRUE))
 
-# Compare these averages
+#Compare these averages
 average_scores
 
 #anova test
