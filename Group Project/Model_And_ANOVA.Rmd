@@ -17,7 +17,7 @@ data <- compas_scores_two_years %>%
   select(id, sex, age, race, priors_count...9, is_recid) %>%
   filter(!is.na(is_recid))
 
-# Split into training and testing sets (75% training data)
+# Split into training and testing sets (75% training data)  #learned about logistic training from various sources including https://stackoverflow.com/questions/58617114/logistic-regression-training-and-test-data, https://stats.stackexchange.com/questions/94770/when-to-divide-data-into-training-test-set-in-logistic-regression, https://www.datacamp.com/tutorial/logistic-regression-R
 set.seed(8675309)
 training_rows <- sample(nrow(data), 0.75 * nrow(data))
 train_data <- data[training_rows, ]
@@ -67,7 +67,7 @@ average_scores <- test_data %>%
 #Compare these averages
 average_scores
 
-#anova test
+#anova test https://statsandr.com/blog/anova-in-r/
 anova_result <- aov(is_recid ~ race, data = compas_scores_two_years)
 summary(anova_result)
 #p values for model
