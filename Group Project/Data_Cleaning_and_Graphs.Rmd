@@ -15,14 +15,18 @@ data = read.csv("compas-scores-two-years.csv")
 Renaming Columns
 
 ```{r}
+head(data) #Checking column titles and variable type
+str(data)
+
+#Renaming column relevant names 
 data = data %>% rename(Sex = sex,
                 Age = age,
                 Race = race,
                 Is_recid = is_recid,
-                Recidivism_score = decile_score...40,
+                Recidivism_score = decile_score.1,
                 Score_text = score_text,
                 Violence_score = v_decile_score,
-                Priors = priors_count...49)
+                Priors = priors_count.1)
 ```
 
 
@@ -39,9 +43,9 @@ Data Visualization
 str(data)
 unique(data$Race) #looking at different races in dataframe
 
-data %>% group_by(race) %>%
-  count(race)  %>%
-  ggplot(aes(x = reorder(race, -n), y = n)) + 
+data %>% group_by(Race) %>%
+  count(Race)  %>%
+  ggplot(aes(x = reorder(Race, -n), y = n)) + 
   geom_col() + 
   theme_minimal() + 
   labs(title = "Representation of each Race in the Dataset", 
@@ -63,9 +67,9 @@ ggplot(data, aes(x = Recidivism_score)) +
 - Making column chart of score distribution filled in for each race
 
 ```{r}
-data %>% group_by(race) %>%
-  count(recidivism_score) %>%
-  ggplot(aes(x = recidivism_score, y = n, fill = race)) + 
+data %>% group_by(Race) %>%
+  count(Recidivism_score) %>%
+  ggplot(aes(x = Recidivism_score, y = n, fill = Race)) + 
   geom_col() +
   theme_minimal() +
   labs(title = "Distribution of Scores by Race",
@@ -76,9 +80,9 @@ data %>% group_by(race) %>%
 - Making box plot of score distribution and removing Asian and Native American because of too few data points in set
 
 ```{r}
-data %>% filter(race != 'Native American') %>%
-  filter(race != 'Asian') %>%
-  ggplot(aes(x = race, y = recidivism_score)) +
+data %>% filter(Race != 'Native American') %>%
+  filter(Race != 'Asian') %>%
+  ggplot(aes(x = Race, y = Recidivism_score)) +
   geom_boxplot() +
   labs(title = "Distribution of Recidivism Scores by Race",
        x = "Race",
@@ -87,23 +91,5 @@ data %>% filter(race != 'Native American') %>%
 
 ```
 
-Filtering out high and medium risk defendants
 
-```{r}
 
-high_risk = data %>% filter(Score_text == 'High') %>%
-  group_by(Race) %>%
-  summarise(count = n())
-
-summary_data <- data %>%
-  filter(Score_text == 'Medium') %>%
-  group_by(Race) %>%
-  summarise(
-    Total_High_Risk = n(),
-    Total_Recidivism = sum(Is_recid, na.rm = TRUE)
-
-    )
-
-summary_data %>% mutate(percent_recid = Total_Recidivism/Total_High_Risk)
-
-```
