@@ -10,11 +10,13 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 ```{r}
 library(dplyr)
 
+compas_scores_two_years = read.csv('compas-scores-two-years.csv')
+
 head(compas_scores_two_years)
 
 # Data Cleaning and Preparation
 data <- compas_scores_two_years %>%
-  select(id, sex, age, race, priors_count...9, is_recid) %>%
+  select(id, sex, age, race, priors_count.1, is_recid) %>%
   filter(!is.na(is_recid))
 
 # Split into training and testing sets (75% training data)  #learned about logistic training from various sources including https://stackoverflow.com/questions/58617114/logistic-regression-training-and-test-data, https://stats.stackexchange.com/questions/94770/when-to-divide-data-into-training-test-set-in-logistic-regression, https://www.datacamp.com/tutorial/logistic-regression-R
@@ -24,7 +26,7 @@ train_data <- data[training_rows, ]
 test_data <- data[-training_rows, ]
 
 # Fit Logistic Regression Model on Training Data
-model <- glm(is_recid ~ age + race + priors_count...9, data = train_data, family = "binomial")
+model <- glm(is_recid ~ age + race + priors_count.1, data = train_data, family = "binomial")
 
 # Predict on Testing Data
 test_data$predicted_recid <- predict(model, newdata = test_data, type = "response")
